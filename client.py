@@ -39,5 +39,6 @@ def clientProgram():
         # Return error message if and error occured creating or using the socket
         print(f"Could not connect to the server: {e}")
 
+#Used to execute some code only if the file was run directly and not imported
 if __name__ == '__main__':
     clientProgram()

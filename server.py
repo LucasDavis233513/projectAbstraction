@@ -2,21 +2,21 @@ import socket
 
 def serverProgram():
     #A TCP based echo server
-    echoSocket = socket.socket()
+    echoServer = socket.socket()
 
-    # This line allow sth eprogram to reuse the socket address
-    echoSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    # This line allows the program to reuse the socket address
+    echoServer.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
     try:
         #Bind the IP address and the port number
-        echoSocket.bind(("127.0.0.1", 32007))
+        echoServer.bind(("127.0.0.1", 32007))
 
         #Listen for incoming connections
-        echoSocket.listen()
+        echoServer.listen()
 
         #Start accepting client connections
         while(True):
-            (clientSocket, clientAdress) = echoSocket.accept()
+            (clientSocket, clientAdress) = echoServer.accept()
 
             print("Connection from: " + str(clientAdress))
             while(True):
@@ -30,7 +30,7 @@ def serverProgram():
                     #Send an ack back to the client and close the socket
                     clientSocket.send("ACKed, shutting Down Server".encode())
                     clientSocket.close()
-                    echoSocket.close()
+                    echoServer.close()
 
                     exit(0) #Exit with status code 0
                 elif(data != b''):
@@ -43,5 +43,6 @@ def serverProgram():
         # Return error message if and error occured creating or using the socket
         print(f"Server could not be started: {e}")
 
+#Used to execute some code only if the file was run directly and not imported
 if __name__ == '__main__':
     serverProgram()
