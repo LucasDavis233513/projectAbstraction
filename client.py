@@ -48,6 +48,7 @@ def clientProgram():
                             data = fi.read(1024) #read the file in chunks of 1024 bytes
 
                             if not data:
+                                client.send("EOF".encode())
                                 break
                             
                             client.send(data)
