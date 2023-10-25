@@ -44,6 +44,8 @@ def serverProgram():
                     else:
                         # if data si not received break
                         break
+            
+                clientSocket.send(f"Received successfully! New filename is: {filename}".encode())        
     except socket.error as e:
         # Return error message if and error occured creating or using the socket
         print(f"Server could not be started: {e}")
