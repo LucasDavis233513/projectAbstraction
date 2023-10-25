@@ -43,24 +43,19 @@ def clientProgram():
                 exit(0)
             else:
                 try:
-                    fi = open(message, "r")
-                    data = fi.read()
+                    with open(message, "rb") as fi:
+                        while True:
+                            data = fi.read(1024) #read the file in chunks of 1024 bytes
 
-                    if not data:
-                        break
-                    while data:
-                        client.send(str(data).encode())
-                        msgReceived = client.recv(1024)
-
-                        printACK(msgReceived)
-
-                        data = fi.read()
-                    
-                    fi.close()
+                            if not data:
+                                break
+                            
+                            client.send(data)
+                            msgReceived = client.recv(1024)
+                            printACK(msgReceived)
                 except IOError:
-                    print("You entered an invalid filename!\n")
+                    print("You entered an invalid filename\n")
                     print("Please enter a valid name. Eg 'filename.txt'")
-
     except socket.error as e:
         # Return error message if and error occured creating or using the socket
         print(f"Could not connect to the server: {e}")

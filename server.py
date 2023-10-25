@@ -23,36 +23,27 @@ def serverProgram():
 
             print("Connection from: " + str(clientAdress))
 
-            while(True):
-                data = clientSocket.recv(1024).decode()
-                
-                filename = "output.txt"
-                fo = open(filename, "w")
+            filename = "output.txt"
+            with open(filename, "wb") as fo:
+                while True:
+                    data = clientSocket.recv(1024)
 
-                #If client issues kill cmd, shutdown the server
-                if(data == 'kill'):
-                    print("Kill cmd recieved. Shutting down the server")
+                    #If client issues kill cmd, shutdown the server
+                    if data.decode() == 'kill':
+                        print("Kill cmd received. Shutting down the server")
 
-                    #Send an ack back to the client and close the socket
-                    clientSocket.send("ACKed, shutting Down Server".encode())
-                    clientSocket.close()
-                    server.close()
+                        #Send an ack back to the client and close the socket
+                        clientSocket.send("ACKed, shutting Down Server".encode())
+                        clientSocket.close()
+                        server.close()
 
-                    exit(0) #Exit with status code 0
-                elif data: 
-                    while data:
-                        if not data:
-                            break
-                        else:
-                            fo.write(data)
-                            clientSocket.send("Data packet ACK".encode())
-                            data = clientSocket.recv(1024).decode()
-                    
-                    clientSocket.send(f"Received successfully! New filename is: {filename}".encode())
-                    fo.close()
-                elif not data:
-                    # if data si not received break
-                    break
+                        exit(0) #Exit with status code 0
+                    elif data:
+                        fo.write(data)
+                        clientSocket.send("Data packet ACK".encode())
+                    else:
+                        # if data si not received break
+                        break
     except socket.error as e:
         # Return error message if and error occured creating or using the socket
         print(f"Server could not be started: {e}")
