@@ -29,17 +29,18 @@ def serverProgram():
                     data = clientSocket.recv(1024)
 
                     #If client issues kill cmd, shutdown the server
-                    if data.decode() == 'kill':
-                        print("Kill cmd received. Shutting down the server")
-
+                    if data.decode() == 'EOF':
+                        break
+                    elif data.decode() == 'kill':
                         #Send an ack back to the client and close the socket
                         clientSocket.send("ACKed, shutting Down Server".encode())
+                        
+                        print("Kill cmd received. Shutting down the server")
+
                         clientSocket.close()
                         server.close()
 
                         exit(0) #Exit with status code 0
-                    elif data.decode() == 'EOF':
-                        break
                     elif data:
                         fo.write(data)
                         clientSocket.send("Data packet ACK".encode())
