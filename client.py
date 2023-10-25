@@ -49,6 +49,8 @@ def clientProgram():
 
                             if not data:
                                 client.send("EOF".encode())
+                                msgReceived = client.recv(1024)
+                                printACK(msgReceived)
                                 break
                             
                             client.send(data)

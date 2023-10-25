@@ -38,6 +38,8 @@ def serverProgram():
                         server.close()
 
                         exit(0) #Exit with status code 0
+                    elif data.decode() == 'EOF':
+                        break
                     elif data:
                         fo.write(data)
                         clientSocket.send("Data packet ACK".encode())
