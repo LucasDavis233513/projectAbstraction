@@ -43,6 +43,7 @@ def clientProgram():
                 exit(0)
             else:
                 try:
+                    client.send(message.encode())
                     with open(message, "rb") as fi:
                         while True:
                             data = fi.read(1024) #read the file in chunks of 1024 bytes
