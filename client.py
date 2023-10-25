@@ -1,40 +1,66 @@
 import socket
 
+def printACK(msgReceived):
+    # if the server did not return a message, exit client program
+    # As the connection is likely lost
+    if not msgReceived:
+        print("Server did not recieve message, or ACK didn't return")
+        print("Connection to the server has been lost. Restart of the")
+        print("Client is required")
+        exit(1)
+    else:
+        # Print the reply
+        print("At client: %s"%msgReceived.decode())
+
 def clientProgram():
     message = ""
-
+    host = "192.168.1.25"
+    port = 32007
+    
     #create a TCP based client socket
-    echoClient = socket.socket()
+    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     try:
         # Note: no need for bind() call in client sockets...
         # just use the socket by calling connect()
-        echoClient.connect(("127.0.0.1", 32007))
+        client.connect((host, port))
 
         while(True):
             message = input("What is your message? ")
 
             # if user inputs and exit cmd, client program will close
             if(message == "exit"):
-                echoClient.close()
+                client.close()
                 exit(0)
+            elif(message == "kill"):                
+                # Send a message
+                client.send(message.encode())
+                # Get the reply
+                msgReceived = client.recv(1024)
 
-            # Send a message
-            echoClient.send(message.encode())
+                printACK(msgReceived)
 
-            # Get the reply
-            msgReceived = echoClient.recv(1024)
-
-            # if the server did not return a message, exit client program
-            # As the connection is likely lost
-            if not msgReceived:
-                print("Server did not recieve message, or ACK didn't return")
-                print("Connection to the server has been lost. Restart of the")
-                print("Client is required")
-                exit(1)
+                exit(0)
             else:
-                # Print the reply
-                print("At client: %s"%msgReceived.decode())
+                try:
+                    fi = open(message, "r")
+                    data = fi.read()
+
+                    if not data:
+                        break
+                    while data:
+                        client.send(str(data).encode())
+                        msgReceived = client.recv(1024)
+
+                        printACK(msgReceived)
+
+                        data = fi.read()
+                    
+                    fi.close()
+                except IOError:
+                    print("You entered an invalid filename!\n")
+                    print("Please enter a valid name. Eg 'filename.txt'")
+
     except socket.error as e:
         # Return error message if and error occured creating or using the socket
         print(f"Could not connect to the server: {e}")
