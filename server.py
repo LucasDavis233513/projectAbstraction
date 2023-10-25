@@ -26,10 +26,19 @@ def serverProgram():
             filename = clientSocket.recv(1024).decode()
             data_buffer = []
 
+            if filename == 'kill':
+                clientSocket.send("ACKed, shutting Down Server".encode())
+
+                print("Kill cmd received. Shutting down the server")
+
+                clientSocket.close()
+                server.close()
+                exit(0) # Ext with status code 0
+
             while True:
                 data = clientSocket.recv(1024)
 
-                if data.decode() == 'EOF':
+                if data == b'EOF':
                     print("File recieved")
 
                     with open(filename, "wb") as fo:
@@ -41,14 +50,6 @@ def serverProgram():
                     clientSocket.send("File recieved successfully. Data written to root dir.".encode())
 
                     break
-                elif data.decode() == 'kill':
-                    clientSocket.send("ACKed, shutting Down Server".encode())
-
-                    print("Kill cmd received. Shutting down the server")
-
-                    clientSocket.close()
-                    server.close()
-                    exit(0) # Ext with status code 0
                 elif data:
                     data_buffer.append(data)    #Add received data to buffer
                     clientSocket.send("Data packet ACK".encode())
