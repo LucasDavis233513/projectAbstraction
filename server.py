@@ -23,9 +23,10 @@ def serverProgram():
 
         #Start accepting client connections
         while(True):
-            filename = clientSocket.recv(1024).decode()
-            data_buffer = []
+            filename = clientSocket.recv(1024).decode() # Initial data will be the filename
+            data_buffer = []                            # create a data buffer array to store the file bytes
 
+            #If the filename is set to "kill" the server will close the clients connection and shutdown the server
             if filename == 'kill':
                 clientSocket.send("ACKed, shutting Down Server".encode())
 
@@ -36,23 +37,26 @@ def serverProgram():
                 exit(0) # Ext with status code 0
 
             while True:
-                data = clientSocket.recv(1024)
+                data = clientSocket.recv(1024) # Wait for incoming data stream up to 1024 bytes in the reciver window
 
+                # Client sends a EOF message to inidicate the end of the data stream
                 if data == b'EOF':
                     print("File recieved")
 
+                    # Write all data in the buffer to a file.
                     with open(filename, "wb") as fo:
                         for data in data_buffer:
                             fo.write(data)
 
+                    # Delete the data_buffer
                     del data_buffer
                 
                     clientSocket.send("File recieved successfully. Data written to root dir.".encode())
 
                     break
                 elif data:
-                    data_buffer.append(data)    #Add received data to buffer
-                    clientSocket.send("Data packet ACK".encode())
+                    data_buffer.append(data)                        #Add received data to buffer
+                    clientSocket.send("Data packet ACK".encode())   #Send ACK for the sent data
                 else:
                     break
 
