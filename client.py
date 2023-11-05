@@ -1,4 +1,24 @@
 import socket
+import time
+
+WINDOW_SIZE = 10
+
+def checkSum(_data):
+    checksum = 0
+    _data = [int.from_bytes(_data[i:i+2], 'little') for i in range(0, len(_data), 2)]
+
+    for data16 in _data:
+        checksum += data16
+
+        # while there is a
+        while ((checksum >> 16) > 0):
+            # Add cary to the sum
+            checksum = (checksum & 0xFFFF) + (checksum >> 16)
+
+    # Ones complement
+    checksum = ~checksum & 0xFFFF
+
+    return checksum
 
 def printACK(msgReceived):
     # if the server did not return a file, exit client program
@@ -12,7 +32,60 @@ def printACK(msgReceived):
         # Print the reply
         print("At client: %s"%msgReceived.decode())
 
-def clientProgram():
+def sendFile(_file, _socket):
+    try:
+        #Attempt to open file with read bytes option.
+        with open(_file, "rb") as fi:
+            _socket.send(_file.encode())  # Send the filename to the server
+            seq_num = 0                   # Initialize the sequence numer
+            window_packet = []            # Create a window buffer to store the packets
+
+            while True:
+                data = fi.read(1024) #read the file in chunks of 1024 bytes
+                
+                # If data is NULL (all bytes are read) break from the while loop
+                if not data:        
+                    _socket.send("EOF".encode())              # send an EOF message
+                    msgReceived = _socket.recv(1024)          # wait for final ACK message
+                    printACK(msgReceived)                     # print ACK
+                    break
+
+                checksum = checkSum(data)
+                # append the seq_num to the start and checksum to the end of the data bytes and save to a packet
+                packet_to_send =  seq_num.to_bytes(2, 'little') + data + checksum.to_bytes(2, 'little')
+                window_packet.append(packet_to_send)
+
+                seq_num += 1                            # increment seq_num
+
+                if len(window_packet) == WINDOW_SIZE:
+                    for packet in window_packet:
+                        _socket.send(packet)
+                        time.sleep(0.01)
+
+                    msgReceived = client.recv(1024)
+
+                    while(True):
+                        if msgReceived.decode() == "CorruptACK":
+                            printACK(msgReceived)
+
+                            for packet in window_packet:
+                                _socket.send(packet)
+                                time.sleep(0.01)
+                        elif msgReceived.decode().startswith("ACK"):
+                            # Split the message into indicidual acknowledgments
+                            ack_num = msgReceived.decode().split('ACK')[-1:]
+                            ack_num = int(ack_num[0])
+
+                            if ack_num == seq_num:
+                                window_packet.clear()
+                                print("Set of 10 packets recieved")
+                                break
+
+    except IOError:     # if an error was encountered when reading from the file, we will error out
+        print("You entered an invalid filename\n")
+        print("Please enter a valid name. Eg 'filename.txt'")
+
+if __name__ == '__main__':
     file = ""
     host = "192.168.1.25"
     port = 32007
@@ -38,30 +111,9 @@ def clientProgram():
 
                 exit(0)
             else:
-                try:
-                    #Attempt to open file with read bytes option.
-                    with open(file, "rb") as fi:
-                        client.send(file.encode()) # Send the filename to the server
-                        while True:
-                            data = fi.read(1024) #read the file in chunks of 1024 bytes
-                            
-                            # If data is NULL (all bytes are read) break from the while loop
-                            if not data:        
-                                client.send("EOF".encode())         # send an EOF message
-                                msgReceived = client.recv(1024)     # wait for final ACK message
-                                printACK(msgReceived)               # print ACK
-                                break
-                            
-                            client.send(data)                   # Send the data to the server
-                            msgReceived = client.recv(1024)     # Wait for ACK message
-                            printACK(msgReceived)               # Print ACK
-                except IOError:     # if an error was encountered when reading from the file, we will error out
-                    print("You entered an invalid filename\n")
-                    print("Please enter a valid name. Eg 'filename.txt'")
+                sendFile(file, client)
+
     except socket.error as e:
         # Return error file if and error occured creating or using the socket
         print(f"Could not connect to the server: {e}")
 
-#Used to execute some code only if the file was run directly and not imported
-if __name__ == '__main__':
-    clientProgram()
