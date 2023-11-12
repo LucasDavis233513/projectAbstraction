@@ -27,8 +27,8 @@ def checkSum(_data):
 def extractData(_data):
     seq_number = int.from_bytes(_data[:2], 'little')  # Extract the first two bytes as the seq_number
     _data = _data[2:]                                 # remove the first two bytes
-    checksum = int.from_bytes(_data[-2:], 'little')   # Extract the last two bytes as the checksum
-    _data = _data[:-2]                                # remove the last two bytes
+    checksum = int.from_bytes(_data[:2], 'little')    # Extract the next two bytes as the checksum
+    _data = _data[2:]                                 # remove the last two bytes
 
     return _data, checksum, seq_number
 

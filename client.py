@@ -41,7 +41,7 @@ def checkSum(_data):
 # to create our data packet: both are encoded using little endian 
 def createPacket(_data, _seqNum):
     checksum = checkSum(_data)
-    return _seqNum.to_bytes(2, 'little') + _data + checksum.to_bytes(2, 'little')
+    return _seqNum.to_bytes(2, 'little') + checksum.to_bytes(2, 'little') + _data
 
 def sendFile(_socket, _window, _base):
     for packet in _window[_base:]:
